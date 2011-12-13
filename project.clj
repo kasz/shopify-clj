@@ -5,4 +5,5 @@
                  [org.clojure/clojure-contrib "1.2.0"]
                  [clj-http "0.2.4"]
                  [digest "1.3.0"]
-                 ])
+                 ]
+  :dev-dependencies [[swank-clojure "1.3.2"]])

@@ -4,3 +4,4 @@ pom.xml
 /classes/
 .lein-failures
 .lein-deps-sum
+add-to-internal-repo.sh

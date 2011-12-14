@@ -5,3 +5,4 @@ pom.xml
 .lein-failures
 .lein-deps-sum
 add-to-internal-repo.sh
+src/shopify_clj/core_test.clj

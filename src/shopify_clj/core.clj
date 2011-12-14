@@ -3,14 +3,15 @@
             [digest]
             [clj-json.core :as json]))
 
-
 ;; Authentication stuff
+
 (defn- sig-digest [shared-secret pre-signature]
   (let [pre-sig-digest (reduce
                         (fn [res next]
                           (if (or (= nil next) (= "" next))
                             res
-                            (str res next))) pre-signature)]
+                            (str res next)))
+                        pre-signature)]
     (digest/md5 (str shared-secret pre-sig-digest))))
 
 (defn- pre-signature [response-map]
@@ -24,7 +25,14 @@
         signature (get shopify-response "signature")]
     (= signature calculated-signature)))
 
-(defn generate-password [app-credentials shopify-response]
+;;; structure of that type should be passed as app-credentials parameter in the following function
+(defstruct password-credentials :shared-secret)
+
+(defn generate-password
+  "Function responsible for generating password. It requries shared secret of
+   application, wrapped in password-credentials (app-credentials) struct nad
+   map if parameters received when user installed application (shopify-response)."
+  [app-credentials shopify-response]
   (if (valid-signature? app-credentials shopify-response)
     (let [secret (get app-credentials :shared-secret)
           token (get shopify-response "t")]
@@ -32,8 +40,12 @@
     nil))
 
 ;; API Calls
+
+;;; structure of that type should be passed as credentials parameter in the following functions
+(defstruct request-credentials :shop :api-key :password :shared-secret)
+
 (defn- construct
-  "builds the route from the give arguments"
+  "Builds the route from the given arguments."
   ([] "")
   ([x] (str "/" x))
   ([x & more]
@@ -45,8 +57,9 @@
    :accept :json})
 
 (defn- endpoint [credentials]
-  (str (:shop credentials) "/admin"))
+  (str "https://" (:shop credentials) "/admin"))
 
+;;; maybe use macro for following functions?
 (defn shopify-read [credentials route]
   (let [request (str (endpoint credentials) route)]
     (json/parse-string (:body (client/get request (request-data credentials))))))

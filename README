@@ -1,10 +1,35 @@
 # shopify-clj
 
-FIXME: write description
+Shopify API adapter for Clojure.
 
 ## Usage
 
-FIXME: write
+To generate password from parameters received in URL just pass them as second
+parameter (as struct) to generate-password function, along with map containing
+shared secret value (with :shared-secret as key) as first parameter.  To use
+API method just pass map with parameters to function like shopify-(verb),
+where verb can be any of read, create, update and delete as first parameter
+and route as "/action" string, e.g. "/products". Optional third parameter
+specifies parameter map.
+
+Examples:
+
+Generating password:
+
+user> (generate-password (struct password-credentials "sharedsecret1234") 
+			 {"shop" "xxx1234.myshopify.com", "timestamp" "1133831885", 
+			 "signature" "ssssssssssssssssssssssssssssssss", "t" "tttttttttttttttttttttttttttttttt"})
+
+{:shared-secret "sharedsecret1234", :password "somepassword5678"}
+
+Asking for products:
+
+(shopify-read (struct request-credentials "xxx1234.myshopify.com" 
+			    "apikey1234" "somepassword5678" 
+			    "sharedsecret1234")
+	      "/products")
+
+{"products" ...}
 
 ## License
 

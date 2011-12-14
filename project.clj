@@ -1,9 +1,7 @@
-(defproject shopify-clj "0.0.1"
-  :description "FIXME: write description"
-  :dependencies [
-                 [org.clojure/clojure "1.2.1"]
-                 [org.clojure/clojure-contrib "1.2.0"]
-                 [clj-http "0.2.4"]
-                 [digest "1.3.0"]
-                 ]
+(defproject shopify-clj "0.1.0"
+  :description "shopify-clj modified to use clj-json."
+  :dependencies [[org.clojure/clojure "1.3.0"]
+                 [clj-json "0.4.3"]
+                 [clj-http "0.2.5"]
+                 [digest "1.3.0"]]
   :dev-dependencies [[swank-clojure "1.3.2"]])

@@ -2,7 +2,7 @@
   [:require
    [clj-http.client :as client]
    [digest]
-   [clojure.contrib.json :as json]
+   [clojure.contrib.json :as json]      ; JSON here is only for put/get/ etc. should be easy to replace
    ])
 
 
@@ -33,6 +33,7 @@
     )
   )
 
+;;; only important function here
 (defn generate-password [app-credentials shopify-response]
   (if (valid-signature? app-credentials shopify-response)
     (let [secret (get app-credentials :shared-secret)

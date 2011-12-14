@@ -1,12 +1,11 @@
 (ns shopify-clj.core
-  (:require
-   [clj-http.client :as client]
-   [digest]
-   [clojure.contrib.json :as json]))
+  (:require [clj-http.client :as client]
+            [digest]
+            [clj-json.core :as json]))
 
 
 ;; Authentication stuff
-(defn sig-digest [shared-secret pre-signature]
+(defn- sig-digest [shared-secret pre-signature]
   (let [pre-sig-digest (reduce
                         (fn [res next]
                           (if (or (= nil next) (= "" next))
@@ -14,13 +13,13 @@
                             (str res next))) pre-signature)]
     (digest/md5 (str shared-secret pre-sig-digest))))
 
-(defn pre-signature [response-map]
+(defn- pre-signature [response-map]
   (sort
    (map (fn [entry]
           (if (not= "signature" (first entry)) (str (first entry) "=" (last entry)) nil))
         response-map)))
 
-(defn valid-signature? [app-credentials shopify-response]
+(defn- valid-signature? [app-credentials shopify-response]
   (let [calculated-signature (sig-digest (:shared-secret app-credentials) (pre-signature shopify-response))
         signature (get shopify-response "signature")]
     (= signature calculated-signature)))
@@ -33,36 +32,34 @@
     nil))
 
 ;; API Calls
-(defn construct
+(defn- construct
   "builds the route from the give arguments"
   ([] "")
   ([x] (str "/" x))
   ([x & more]
      (reduce #(str %1 (construct %2)) (construct x) more)))
 
-(defn request-data [credentials]
+(defn- request-data [credentials]
   {:basic-auth [(:api-key credentials) (:password credentials)]
    :content-type :json
    :accept :json})
 
-(defn endpoint [credentials]
+(defn- endpoint [credentials]
   (str (:shop credentials) "/admin"))
 
 (defn shopify-read [credentials route]
   (let [request (str (endpoint credentials) route)]
-    (do
-      (println request)
-      (json/read-json (:body (client/get request (request-data credentials)))))))
+    (json/parse-string (:body (client/get request (request-data credentials))))))
 
 (defn shopify-create [credentials route data]
   (let [request (str (endpoint credentials) route)
-        args (merge {:body (json/json-str data)} (request-data credentials))]
-    (json/read-json (:body (client/post request args)))))
+        args (merge {:body (json/generate-string data)} (request-data credentials))]
+    (json/parse-string (:body (client/post request args)))))
 
 (defn shopify-update [credentials route data]
   (let [request (str (endpoint credentials) route)
-        args (merge {:body (json/json-str data)} (request-data credentials))]
-    (json/read-json (:body (client/put request args)))))
+        args (merge {:body (json/generate-string data)} (request-data credentials))]
+    (json/parse-string (:body (client/put request args)))))
 
 (defn shopify-delete [credentials route]
   (let [request (str (endpoint credentials) route)]

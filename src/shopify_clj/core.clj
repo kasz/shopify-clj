@@ -20,29 +20,25 @@
           (if (not= "signature" (first entry)) (str (first entry) "=" (last entry)) nil))
         response-map)))
 
-(defn- valid-signature? [app-credentials shopify-response]
-  (let [calculated-signature (sig-digest (:shared-secret app-credentials) (pre-signature shopify-response))
+(defn- valid-signature? [shared-secret shopify-response]
+  (let [calculated-signature (sig-digest shared-secret (pre-signature shopify-response))
         signature (get shopify-response "signature")]
     (= signature calculated-signature)))
-
-;;; structure of that type should be passed as app-credentials parameter in the following function
-(defstruct password-credentials :shared-secret)
 
 (defn generate-password
   "Function responsible for generating password. It requries shared secret of
    application, wrapped in password-credentials (app-credentials) struct nad
    map if parameters received when user installed application (shopify-response)."
-  [app-credentials shopify-response]
-  (if (valid-signature? app-credentials shopify-response)
-    (let [secret (get app-credentials :shared-secret)
-          token (get shopify-response "t")]
-      (merge app-credentials {:password (digest/md5 (str secret token))}))
+  [shared-secret shopify-response]
+  (if (valid-signature? shared-secret shopify-response)
+    (let [token (get shopify-response "t")]
+      (digest/md5 (str shared-secret token)))
     nil))
 
 ;; API Calls
 
 ;;; structure of that type should be passed as credentials parameter in the following functions
-(defstruct request-credentials :shop :api-key :password :shared-secret)
+(defstruct request-credentials :shop :api-key :password)
 
 (defn- construct
   "Builds the route from the given arguments."

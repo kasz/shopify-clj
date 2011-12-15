@@ -27,8 +27,8 @@
 
 (defn generate-password
   "Function responsible for generating password. It requries shared secret of
-   application, wrapped in password-credentials (app-credentials) struct nad
-   map if parameters received when user installed application (shopify-response)."
+   application and map if parameters received when user installed application 
+   (shopify-response)."
   [shared-secret shopify-response]
   (if (valid-signature? shared-secret shopify-response)
     (let [token (get shopify-response "t")]

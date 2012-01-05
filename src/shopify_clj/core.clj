@@ -3,8 +3,10 @@
             [digest]
             [clj-json.core :as json]))
 
-;; Authentication stuff
+;;; Constants
+(def limit-time-reset 300)              ; in seconds
 
+;; Authentication stuff
 (defn- sig-digest [shared-secret pre-signature]
   (let [pre-sig-digest (reduce
                         (fn [res next]
@@ -27,7 +29,7 @@
 
 (defn generate-password
   "Function responsible for generating password. It requries shared secret of
-   application and map if parameters received when user installed application 
+   application and map of parameters received when user installed application 
    (shopify-response)."
   [shared-secret shopify-response]
   (if (valid-signature? shared-secret shopify-response)

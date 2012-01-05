@@ -74,4 +74,4 @@
 
 (defn shopify-delete [credentials route]
   (let [request (str (endpoint credentials) route)]
-    (:body (client/delete request (request-data credentials)))))
+    (json/parse-string (:body (client/delete request (request-data credentials))))))

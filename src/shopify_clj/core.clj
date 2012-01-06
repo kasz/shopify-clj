@@ -67,9 +67,8 @@
         data (gensym "data_")
         route (gensym "route_")
         credentials (gensym "credentials_")]
-    `(defn ~(symbol (str "shopify-" name)) ~(if has-data
-                                              [credentials route data]
-                                              [credentials route])
+    `(defn ~(symbol (str "shopify-" name))
+       ~(if has-data [credentials route data] [credentials route])
        (let [request# (str (endpoint ~credentials) ~route)
              args# ~(if has-data
                      `(merge {:body (json/generate-string ~data)} (request-data ~credentials))

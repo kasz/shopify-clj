@@ -62,16 +62,19 @@
    Created function will be named shopify-name, where name needs to be passed as first parameter.
    Second parameter must be a string containing HTTP verb (GET, POST, PUT or DELETE)."
   [name http-verb]
-  (let [http-client-function @(resolve (symbol (str "client/" (.toLowerCase http-verb))))]
-    (if (or (= http-client-function client/post) (= http-client-function client/put))
-      `(defn ~(symbol (str "shopify-" name)) [credentials# route# data#]
-         (let [request# (str (endpoint credentials#) route#)
-               args# (merge {:body (json/generate-string data#)} (request-data credentials#))]
-           (json/parse-string (:body (~http-client-function request# args#)))))
-      `(defn ~(symbol (str "shopify-" name)) [credentials# route#]
-         (let [request# (str (endpoint credentials#) route#)
-               args# (request-data credentials#)]
-           (json/parse-string (:body (~http-client-function request# args#))))))))
+  (let [http-client-function @(resolve (symbol (str "client/" (.toLowerCase http-verb)))) ; converting HTTP verb to analogous function in clj-http.client
+        has-data (or (= http-client-function client/post) (= http-client-function client/put))
+        data (gensym "data_")
+        route (gensym "route_")
+        credentials (gensym "credentials_")]
+    `(defn ~(symbol (str "shopify-" name)) ~(if has-data
+                                              [credentials route data]
+                                              [credentials route])
+       (let [request# (str (endpoint ~credentials) ~route)
+             args# ~(if has-data
+                     `(merge {:body (json/generate-string ~data)} (request-data ~credentials))
+                     `(request-data ~credentials))]
+         (json/parse-string (:body (~http-client-function request# args#)))))))
 
 (def-shopify-api-fn "read" "get")
 
@@ -80,23 +83,3 @@
 (def-shopify-api-fn "update" "put")
 
 (def-shopify-api-fn "delete" "delete")
-
-(comment (defn shopify-read [credentials route]
-   (let [request (str (endpoint credentials) route)
-         args (request-data credentials)]
-     (json/parse-string (:body (client/get request args)))))
-
- (defn shopify-create [credentials route data]
-   (let [request (str (endpoint credentials) route)
-         args (merge {:body (json/generate-string data)} (request-data credentials))]
-     (json/parse-string (:body (client/post request args)))))
-
- (defn shopify-update [credentials route data]
-   (let [request (str (endpoint credentials) route)
-         args (merge {:body (json/generate-string data)} (request-data credentials))]
-     (json/parse-string (:body (client/put request args)))))
-
- (defn shopify-delete [credentials route]
-   (let [request (str (endpoint credentials) route)]
-     (json/parse-string (:body (client/delete request (request-data credentials))))))
- )

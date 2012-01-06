@@ -1,4 +1,4 @@
-(defproject shopify-clj "0.1.0"
+(defproject shopify-clj "0.1.1"
   :description "shopify-clj modified to use clj-json."
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [clj-json "0.4.3"]

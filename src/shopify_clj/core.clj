@@ -57,21 +57,46 @@
 (defn- endpoint [credentials]
   (str "https://" (:shop credentials) "/admin"))
 
-;;; maybe use macro for following functions?
-(defn shopify-read [credentials route]
-  (let [request (str (endpoint credentials) route)]
-    (json/parse-string (:body (client/get request (request-data credentials))))))
+(defmacro def-shopify-api-fn
+  "Macro responsible for creating functions calling Shopify API. 
+   Created function will be named shopify-name, where name needs to be passed as first parameter.
+   Second parameter must be a string containing HTTP verb (GET, POST, PUT or DELETE)."
+  [name http-verb]
+  (let [http-client-function @(resolve (symbol (str "client/" (.toLowerCase http-verb))))]
+    (if (or (= http-client-function client/post) (= http-client-function client/put))
+      `(defn ~(symbol (str "shopify-" name)) [credentials# route# data#]
+         (let [request# (str (endpoint credentials#) route#)
+               args# (merge {:body (json/generate-string data#)} (request-data credentials#))]
+           (json/parse-string (:body (~http-client-function request# args#)))))
+      `(defn ~(symbol (str "shopify-" name)) [credentials# route#]
+         (let [request# (str (endpoint credentials#) route#)
+               args# (request-data credentials#)]
+           (json/parse-string (:body (~http-client-function request# args#))))))))
 
-(defn shopify-create [credentials route data]
-  (let [request (str (endpoint credentials) route)
-        args (merge {:body (json/generate-string data)} (request-data credentials))]
-    (json/parse-string (:body (client/post request args)))))
+(def-shopify-api-fn "read" "get")
 
-(defn shopify-update [credentials route data]
-  (let [request (str (endpoint credentials) route)
-        args (merge {:body (json/generate-string data)} (request-data credentials))]
-    (json/parse-string (:body (client/put request args)))))
+(def-shopify-api-fn "create" "post")
 
-(defn shopify-delete [credentials route]
-  (let [request (str (endpoint credentials) route)]
-    (json/parse-string (:body (client/delete request (request-data credentials))))))
+(def-shopify-api-fn "update" "put")
+
+(def-shopify-api-fn "delete" "delete")
+
+(comment (defn shopify-read [credentials route]
+   (let [request (str (endpoint credentials) route)
+         args (request-data credentials)]
+     (json/parse-string (:body (client/get request args)))))
+
+ (defn shopify-create [credentials route data]
+   (let [request (str (endpoint credentials) route)
+         args (merge {:body (json/generate-string data)} (request-data credentials))]
+     (json/parse-string (:body (client/post request args)))))
+
+ (defn shopify-update [credentials route data]
+   (let [request (str (endpoint credentials) route)
+         args (merge {:body (json/generate-string data)} (request-data credentials))]
+     (json/parse-string (:body (client/put request args)))))
+
+ (defn shopify-delete [credentials route]
+   (let [request (str (endpoint credentials) route)]
+     (json/parse-string (:body (client/delete request (request-data credentials))))))
+ )
